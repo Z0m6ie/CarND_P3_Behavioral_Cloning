@@ -19,8 +19,8 @@ The goals / steps of this project are the following:
 
 [image1]: ./project_img/NVIDIA.png "NVIDIA Base Architecture"
 [image2]: ./project_img/center.jpg "center lane driving"
-[image3]: ./project_img/uncropped.jpg "Recovery Image"
-[image4]: ./project_img/cropped.jpg "Recovery Image"
+[image3]: ./project_img/uncropped.jpg "Uncropped"
+[image4]: ./project_img/cropped.jpg "Cropped"
 [image5]: ./Working_model_provided_data/figure_1.png "Provided Data"
 [image6]: ./Working_model_self_data/figure_1.png "Self Created Data"
 
@@ -151,7 +151,7 @@ I cropped the original image in the model to reduce the amount of inconsequentia
 ![alt text][image3]
 ![alt text][image4]
 
-At the end of the the data recording I had roughly 26,000 frames and stearing angles.
+At the end of the the data recording I had roughly 26,000 frames and steering angles.
 
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set.

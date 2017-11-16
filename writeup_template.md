@@ -21,8 +21,8 @@ The goals / steps of this project are the following:
 [image2]: ./project_img/center.jpg "center lane driving"
 [image3]: ./project_img/uncropped.jpg "Uncropped"
 [image4]: ./project_img/cropped.jpg "Cropped"
-[image5]: ./Working_model_provided_data/figure_1.png "Provided Data"
-[image6]: ./Working_model_self_data/figure_1.png "Self Created Data"
+[image5]: ./figure_1.png "Graph"
+
 
 
 ## Rubric Points
@@ -36,14 +36,14 @@ The goals / steps of this project are the following:
 My project includes the following files:
 * clone.py containing the script to create and train the model
 * drive.py for driving the car in autonomous mode
-* model.h5 containing a trained convolution neural network
+* model01.h5, model03.h5, model04.h5 containing a trained convolution neural network
 * writeup_report.md summarizing the results
-* run1.mp4 video file showing a successful lap
+* Model01.mp4, Model03.mp4, Model04.mp4 video files showing successful laps
 
 #### 2. Submission includes functional code
 Using the Udacity provided simulator and my drive.py file along with the model.h5 file, the car can be driven autonomously around the track by executing
 ```sh
-python drive.py model.h5
+python drive.py model01.h5
 ```
 
 #### 3. Submission code is usable and readable
@@ -54,43 +54,42 @@ The clone.py file contains the code for training and saving the convolution neur
 
 #### 1. An appropriate model architecture has been employed
 
-My model consists of a convolution neural network with 5 convolution layers 1 flatten layer, 3 dense layers (including one dropout layer) and an output node.
+My model consists of a convolution neural network with 5 convolution layers 1 flatten layer, 3 dense layers and an output node.
 ```sh
 model = Sequential()
 model.add(Lambda(lambda x: x / 127.5 - 1.,
                  input_shape=(row, col, ch),
                  output_shape=(row, col, ch)))
 model.add(Cropping2D(cropping=((50, 20), (0, 0))))  # Crop image
-model.add(Conv2D(24, 5, 5, subsample=(2, 2), activation='relu'))
-model.add(Conv2D(36, 5, 5, subsample=(2, 2), activation='relu'))
-model.add(Conv2D(48, 5, 5, subsample=(2, 2), activation='relu'))
-model.add(Conv2D(64, 3, 3, activation='relu'))
-model.add(Conv2D(64, 3, 3, activation='relu'))
+model.add(Conv2D(24, 5, 5, subsample=(2, 2),activation='relu', W_regularizer=l2(0.001)))
+model.add(Conv2D(36, 5, 5, subsample=(2, 2),activation='relu', W_regularizer=l2(0.001)))
+model.add(Conv2D(48, 5, 5, subsample=(2, 2),activation='relu', W_regularizer=l2(0.001)))
+model.add(Conv2D(64, 3, 3, activation='relu', W_regularizer=l2(0.001)))
+model.add(Conv2D(64, 3, 3, activation='relu', W_regularizer=l2(0.001)))
 model.add(Flatten())
-model.add(Dense(100, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(50, activation='relu'))
-model.add(Dense(10, activation='relu'))
+model.add(Dense(100, activation='relu', W_regularizer=l2(0.001)))
+model.add(Dense(50, activation='relu', W_regularizer=l2(0.001)))
+model.add(Dense(10, activation='relu', W_regularizer=l2(0.001)))
 model.add(Dense(1))
 ```
 
-The model includes RELU activation functions to introduce nonlinearity and the data is normalized in the model using a Keras lambda layer (code line 61).
+The model includes RELU activation functions to introduce nonlinearity and the data is normalized in the model using a Keras lambda layer (code line 80).
 
-In addition on line 64 of the clone.py file we have used keras cropping layer to crop the input image down to just the road, getting rid of the sky and trees (possible confounding factors). This also speeds up training.
+In addition on line 83 of the clone.py file we have used keras cropping layer to crop the input image down to just the road, getting rid of the sky and trees (possible confounding factors). This also speeds up training.
 
 #### 2. Attempts to reduce overfitting in the model
 
-The model contains a dropout layer on line 72 in order to reduce overfitting. During my various training phases I tried several different drop outs from none, 25, 35 & 50%. 50% gave the best response when testing on the track.
+The model contains L2 regularization on all layers in order to reduce overfitting. During my various training phases I also used dropouts and gobal pooling. dropouts worked just as well but I decided to go with L2 as i hadn't really used it before. Pooling did not harm results but did not improve them either and it increased training time.
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 23). This validation set enabled me to use the keras model checkpointing system to ensure only the best models were saved. In addition I was able to plot the training and validations results to check for overfitting or underfitting. The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 23). I used the keras model checkpointing system to ensure all models were saved which allowed the model to be tested at every epoch. In addition I was able to plot the training and validations results to check for overfitting or underfitting. The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
 #### 3. Model parameter tuning
 
-The model used an adam optimizer, so the learning rate was not tuned manually (clone.py line 77). As further work I may experiment with the different optimizers. I have used others in the past but adam usually provides the best results, so it was my default choice on this project.
+The model used an adam optimizer, so the learning rate was not tuned manually (clone.py line 103). As further work I may experiment with the different optimizers. I have used others in the past but adam usually provides the best results, so it was my default choice on this project.
 
 #### 4. Appropriate training data
 
-I have provided two models in my submission one trained purely from the sample data provided and the other trained with the sample data as a starting point and then with my own created data to a total of about 26,000 frames.
+The model was trained with the sample data as a starting point and then with my own created data to a total of about 26,000 frames.
 
 The data I created myself involved several laps of clean driving in both directions around the test course. The reverse direction was used to counter and left turn bias. I also recorded each corner multiple times taking different angles through the course.
 
@@ -113,11 +112,15 @@ center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2RGB)
 ```
 2) On closer inspection my model had a much lower mean squared error on the testing than the validation set. Leading me to believe on the data I had my model was over fitting and not generalizing well. To combat this I implemented a dropout of 50% on the first dense layer.
 
-After these improvements I was able to make is successfully around the course with both sets of data, hence why I have included both models and videos.
+After these improvements I was able to make is successfully around the course.... Or at least I thought I did. Apparently you are not allowed to slightly touch a kerb (I was taking the racing line!)
+
+After this I played around with the model architecture itself ultimately opting for L2 regularization on every layer. The larger breakthrough came from feeding in the left and right camera views along with a corresponding +/- 0.25 steering angle correction.
+
+This immediately led to a successful run where no yellow lines or kerbs were harmed.
 
 #### 2. Final Model Architecture
 
-The final model architecture is as mentioned above basically the NVIDIA architecture with an additional convolution layer, an added dropout layer and an image cropping layer.
+The final model architecture is as mentioned above basically the NVIDIA architecture with a image cropping layer and L2 regularization.
 
 ```sh
 model = Sequential()
@@ -125,16 +128,15 @@ model.add(Lambda(lambda x: x / 127.5 - 1.,
                  input_shape=(row, col, ch),
                  output_shape=(row, col, ch)))
 model.add(Cropping2D(cropping=((50, 20), (0, 0))))  # Crop image
-model.add(Conv2D(24, 5, 5, subsample=(2, 2), activation='relu'))
-model.add(Conv2D(36, 5, 5, subsample=(2, 2), activation='relu'))
-model.add(Conv2D(48, 5, 5, subsample=(2, 2), activation='relu'))
-model.add(Conv2D(64, 3, 3, activation='relu'))
-model.add(Conv2D(64, 3, 3, activation='relu'))
+model.add(Conv2D(24, 5, 5, subsample=(2, 2),activation='relu', W_regularizer=l2(0.001)))
+model.add(Conv2D(36, 5, 5, subsample=(2, 2),activation='relu', W_regularizer=l2(0.001)))
+model.add(Conv2D(48, 5, 5, subsample=(2, 2),activation='relu', W_regularizer=l2(0.001)))
+model.add(Conv2D(64, 3, 3, activation='relu', W_regularizer=l2(0.001)))
+model.add(Conv2D(64, 3, 3, activation='relu', W_regularizer=l2(0.001)))
 model.add(Flatten())
-model.add(Dense(100, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(50, activation='relu'))
-model.add(Dense(10, activation='relu'))
+model.add(Dense(100, activation='relu', W_regularizer=l2(0.001)))
+model.add(Dense(50, activation='relu', W_regularizer=l2(0.001)))
+model.add(Dense(10, activation='relu', W_regularizer=l2(0.001)))
 model.add(Dense(1))
 ```
 ##### The architecture below was the basis of my final architecture.
@@ -151,19 +153,18 @@ I cropped the original image in the model to reduce the amount of inconsequentia
 ![alt text][image3]
 ![alt text][image4]
 
-At the end of the the data recording I had roughly 26,000 frames and steering angles.
+In addition I used the left and right camera data along with a corresponding corrected steering angle, +/-0.25. I used trial and error to arrive at 0.25 for the correction. my initial guesses of 0.1 and 0.4 provided rather hilarious results.
+This proved to be the breakthrough I needed to make it around the course. 
 
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set.
 
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. I used model checkpointing to save the model with the lowest validation score.
+I used this training data for training the model. The validation set helped determine if the model was over or under fitting.
 
 I also recorded the training and validation graphs for each model to assess overfitting and underfitting:
 
-##### Provided data:
+##### Training & validation Graph:
 ![alt text][image5]
 
-##### Self recorded data:
-![alt text][image6]
 
-What we see in these results is a pattern of mostly slight overfitting. However it must be kept in mind that the loss numbers are very small. In fact the model used on the provided data (model used was the one with the lowest validation score) actually shows some underfitting. This possible let it generalize better with a small set of data.
+What we see in this results is a typical training & validation graph and shows a good decrease and levelling out of both the training and validation loss. This shows a model that is neither overfitting or underfitting
